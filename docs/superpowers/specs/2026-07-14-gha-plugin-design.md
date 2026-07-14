@@ -33,8 +33,8 @@ packaging for Cursor/Codex/Gemini in v1).
 - Auto-installing missing tooling. The doctor skill reports gaps and prints
   the install command; the user runs it themselves.
 - Cross-harness packaging (Cursor/Codex/Gemini/etc).
-- Automated CI test suite for the plugin itself (skills are instructions, not
-  code — see Testing section).
+- A CI pipeline that runs on every push to this repo (see Testing section) —
+  the wrapper scripts get their own lightweight local test harness instead.
 
 ## Tooling this plugin wraps
 
@@ -77,6 +77,48 @@ natural language without the user typing the slash command.
 | `gha-doctor` | action | Presence/version checks for the five tools above; never installs anything itself |
 | `gha-dangerous-patterns` | knowledge | Catalog of GH Actions security anti-patterns: `pull_request_target` combined with untrusted PR-head checkout, script injection via `${{ }}` interpolation in `run:` steps, overbroad `GITHUB_TOKEN` permissions, unpinned third-party actions, cache/artifact poisoning. No standalone action — every skill that touches workflow content (`gha-security-audit`, `gha-maintain`, `gha-creator`, `gha-auditor`) cross-references it, so the same knowledge applies whether or not a subagent is involved. |
 
+### Scripts (`scripts/`)
+
+Every skill that shells out to an external tool does so through a small
+wrapper script, rather than invoking the raw tool directly from the skill's
+instructions. This exists purely to protect the agent's context budget:
+`actionlint`, `zizmor`, `wrkflw`, `pinact`, and `gh` can all produce output
+ranging from nothing (clean pass) to hundreds of lines (many findings, or a
+verbose log). Skills should not be the layer that decides how to compress
+that.
+
+Each wrapper script:
+1. Runs the underlying tool against the given target(s).
+2. Writes the full, unfiltered output to a file in the OS temp directory
+   (a fresh path per invocation) and prints that path.
+3. Parses the same output into a compact result and prints that instead of
+   letting the raw output reach the agent.
+   - **Happy path** is a single line: what ran, against what, and the
+     headline numbers — e.g. `ci.yml: actionlint OK (147 lines, 0 warnings,
+     0 errors)`. Enough for the agent to sense-check that linting actually
+     happened, against the right file, and the file wasn't empty — without
+     paying for a wall of "no issues" output.
+   - **Non-happy path** prints a compact findings list (rule, file:line,
+     one-line message), capped at a reasonable count, plus a note of how
+     many more are in the raw file if truncated.
+4. Exits non-zero only for actual execution failure (tool crashed, file not
+   found) — findings/warnings are reported in the summary, not via exit code,
+   so skills can distinguish "the tool couldn't run" from "the tool ran and
+   found problems."
+
+| Script | Wraps | Used by |
+|---|---|---|
+| `scripts/lint.sh` | `actionlint` | `gha-lint` |
+| `scripts/security-audit.sh` | `zizmor` | `gha-security-audit` |
+| `scripts/local-run.sh` | `wrkflw` | `gha-local-run` |
+| `scripts/maintain.sh` | `pinact` + deprecation/drift checks | `gha-maintain` |
+| `scripts/doctor.sh` | presence/version checks for all five tools | `gha-doctor` |
+| `scripts/gh-run-log.sh` | `gh run view --log` / `gh run watch` | `gha-monitor` (only where log volume is a concern — simple dispatch/cancel calls in `gha-trigger` don't need wrapping) |
+
+Skills call these scripts via Bash and read only the compact summary; the
+temp file path is there for the agent (or the user) to drill in only when
+something looks wrong.
+
 ### Subagents (`agents/`)
 
 | Subagent | Dispatched by | Purpose |
@@ -114,9 +156,13 @@ spec-doc stage.
 
 - `gh` is the only path to the GitHub API; it reuses the user's existing
   `gh auth login` session.
-- Local tools are invoked via Bash, preferring structured output
-  (`actionlint -format '{{json .}}'`, zizmor's SARIF) over text-scraping.
-- Every tool-using skill preflights that its tool is present before shelling
+- Local tools are invoked exclusively through the wrapper scripts described
+  above, never directly from a skill — this is what keeps the happy path to
+  one line of context per tool call instead of a full dump. Scripts prefer
+  structured tool output internally (`actionlint -format '{{json .}}'`,
+  zizmor's SARIF) as the thing they parse, but that's an implementation
+  detail of the script, not something a skill or the agent ever sees raw.
+- Every wrapper script preflights that its tool is present before shelling
   out. On failure, it names the missing tool and points to `/gha:doctor`
   rather than surfacing a raw "command not found."
 
@@ -141,8 +187,15 @@ spec-doc stage.
   (manifest correctness, frontmatter on every skill/command/agent).
 - A `tests/fixtures/` directory with sample workflow files: one clean, one
   with known `actionlint` errors, one with known `zizmor` findings (unpinned
-  action, `pull_request_target` + untrusted checkout). Used to manually
-  verify each skill produces the expected findings during development.
-- No automated CI test suite in v1 — skills are instructions, not code.
-  Verification is manual smoke-testing against the fixtures plus a real
-  scratch repo, tracked as a checklist during implementation.
+  action, `pull_request_target` + untrusted checkout). Used by both automated
+  and manual checks below.
+- The wrapper scripts in `scripts/` are actual code, so they get a
+  lightweight automated smoke test each (a plain shell test, run manually
+  during implementation and re-run before any script change is considered
+  done): run the script against the fixtures and assert the happy-path
+  fixture produces the single-line OK summary, and the bad fixtures produce
+  the expected compact findings with a valid temp-file path. No CI pipeline
+  wired up for this in v1 (see Scope) — it's a local dev-time check.
+- Skills and commands themselves (markdown instructions, not code) remain
+  manually smoke-tested against the fixtures plus a real scratch repo,
+  tracked as a checklist during implementation.
