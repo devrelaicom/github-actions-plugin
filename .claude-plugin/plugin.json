@@ -1,0 +1,19 @@
+{
+  "name": "gha",
+  "version": "0.1.0",
+  "description": "Create, review, maintain, locally test, trigger, and monitor GitHub Actions workflows from Claude Code",
+  "author": {
+    "name": "Aaron Bassett",
+    "email": "aaronbassett@gmail.com"
+  },
+  "homepage": "https://github.com/devrelaicom/github-actions-plugin",
+  "repository": "https://github.com/devrelaicom/github-actions-plugin",
+  "license": "MIT",
+  "keywords": [
+    "github-actions",
+    "ci-cd",
+    "workflows",
+    "linting",
+    "security"
+  ]
+}
