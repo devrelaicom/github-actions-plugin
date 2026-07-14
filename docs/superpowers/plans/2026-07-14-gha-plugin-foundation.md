@@ -1,5 +1,7 @@
 # gha Plugin — Plan 1: Foundation Implementation Plan
 
+> **Status: Complete (2026-07-14).** All 9 tasks implemented via subagent-driven-development, each with a task-scoped spec+quality review, plus a final whole-branch review. The whole-branch review found one Important cross-cutting issue (mktemp's `XXXXXX.log`/`XXXXXX.json` suffix template is not portable to BSD/macOS `mktemp`) which was fixed (commit `cabf2e0`) and verified via both smoke tests. `actionlint`'s clean/bad-lint fixture behavior (as opposed to its usage-error and missing-tool paths) is still only verified by code reading, not execution, since this environment has no `actionlint` installed — verify on a machine with the full toolchain before relying on it in production. Plan 2 (security-audit, maintain) picks up next.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Stand up the `gha` plugin's foundation — plugin manifest, the wrapper-script pattern that keeps tool output out of the agent's context, the tooling-doctor capability, the actionlint-based lint capability, and the shared security-knowledge skill — as a working, installable, testable plugin.
