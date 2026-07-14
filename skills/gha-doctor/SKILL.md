@@ -1,6 +1,6 @@
 ---
 name: gha-doctor
-description: This skill should be used when the user asks to "check my GitHub Actions tooling", "is act/wrkflw/actionlint installed", "what do I need for gha", "run gha doctor", or when another gha skill reports a missing tool and needs to point the user somewhere for install instructions. Checks whether gh, actionlint, wrkflw, zizmor, pinact, and jq are installed and reports install commands for anything missing. Never installs anything itself.
+description: This skill should be used when the user asks to "check my GitHub Actions tooling", "is wrkflw/actionlint installed", "what do I need for gha", "run gha doctor", or when another gha skill reports a missing tool and needs to point the user somewhere for install instructions. Checks whether gh, actionlint, wrkflw, zizmor, pinact, and jq are installed and reports install commands for anything missing. Never installs anything itself.
 version: 0.1.0
 ---
 
@@ -32,7 +32,7 @@ not offer to run it "just this once."
 |---|---|
 | `gh` | All GitHub API access (auth, PRs, runs, dispatch) |
 | `actionlint` | Workflow syntax/schema correctness (used by `gha-lint`) |
-| `wrkflw` | Local workflow execution without requiring Docker (a later plan's `gha-local-run`) |
+| `wrkflw` | Local workflow execution without requiring Docker (a later plan's `gha-local-run`). If a user asks about `act` specifically, note that `gha` uses `wrkflw` instead — `doctor.sh` does not check for `act`. |
 | `zizmor` | Security static analysis (a later plan's `gha-security-audit`) |
 | `pinact` | SHA-pinning and version updates for actions (a later plan's `gha-maintain`) |
 | `jq` | JSON parsing used internally by gha's own wrapper scripts — not a GitHub Actions tool itself, but required for the others to work |

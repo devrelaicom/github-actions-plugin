@@ -24,11 +24,17 @@ The script's own summary is already the right level of detail to relay:
 - **Files with findings** produce a `actionlint found <count> issue(s):`
   header followed by `  <filepath>:<line>:<column> <message>` lines. Relay
   these findings directly (they're already file:line, no reformatting
-  needed), and mention the `Full output: <path>` line so the user can open
-  the raw JSON if they want more than the capped list.
-- If the script prints `MISSING actionlint`, don't try to work around it —
-  tell the user to run `/gha:doctor` (or invoke the `gha-doctor` skill) for
-  the install command.
+  needed).
+- The script always prints a `Full output: <path>` line last, whether or
+  not any issues were found — mention it as where to look for more detail
+  than the capped list, but it's not itself a sign something went wrong on
+  a clean pass.
+- If the script prints `MISSING <tool>` (e.g. `MISSING actionlint` or
+  `MISSING jq`), don't try to work around it — tell the user to run
+  `/gha:doctor` (or invoke the `gha-doctor` skill) for the install command.
+- If the script prints an `ERROR ...` line (a named file that doesn't
+  exist, or actionlint itself failing to run), relay that line directly
+  and stop — don't retry or improvise a workaround.
 
 ## Security findings are a separate concern
 
