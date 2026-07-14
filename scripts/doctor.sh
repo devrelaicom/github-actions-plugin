@@ -46,10 +46,10 @@ install_hint() {
 missing=0
 
 check_tool gh --version                || { install_hint gh gh "" "" "";                                                                                  missing=1; }
-check_tool actionlint -version         || { install_hint actionlint actionlint github.com/rhysd/actionlint/cmd/actionlint github.com/rhysd/actionlint/cmd/actionlint ""; missing=1; }
+check_tool actionlint -version         || { install_hint actionlint actionlint "" github.com/rhysd/actionlint/cmd/actionlint ""; missing=1; }
 check_tool wrkflw --version            || { install_hint wrkflw wrkflw wrkflw "" "";                                                                       missing=1; }
 check_tool zizmor --version            || { install_hint zizmor zizmor zizmor "" zizmor;                                                                   missing=1; }
-check_tool pinact --version            || { install_hint pinact pinact pinact github.com/suzuki-shunsuke/pinact/cmd/pinact "";                            missing=1; }
+check_tool pinact --version            || { install_hint pinact pinact "" github.com/suzuki-shunsuke/pinact/cmd/pinact "";                            missing=1; }
 check_tool jq --version                || { install_hint jq jq "" "" "";                                                                                   missing=1; }
 
 echo
