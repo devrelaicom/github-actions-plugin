@@ -25,7 +25,7 @@ for f in "$@"; do
   fi
 done
 
-TMP_FILE="$(mktemp /tmp/gha-lint.XXXXXX.json)"
+TMP_FILE="$(mktemp "${TMPDIR:-/tmp}/gha-lint.XXXXXX")"
 
 actionlint -format '{{json .}}' "$@" > "$TMP_FILE" 2>/dev/null
 exit_code=$?

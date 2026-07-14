@@ -5,7 +5,7 @@
 # command the user would run themselves.
 set -uo pipefail
 
-TMP_FILE="$(mktemp /tmp/gha-doctor.XXXXXX.log)"
+TMP_FILE="$(mktemp "${TMPDIR:-/tmp}/gha-doctor.XXXXXX")"
 echo "gha doctor run: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$TMP_FILE"
 
 have_brew=0; have_cargo=0; have_go=0; have_pip=0
@@ -55,4 +55,8 @@ check_tool jq --version                || { install_hint jq jq "" "" "";        
 echo
 echo "Full log: $TMP_FILE"
 
+# Deliberate deviation from the general wrapper contract: other wrapper
+# scripts (see scripts/lint.sh) exit 0 unless the underlying tool itself
+# failed to run, never for findings. doctor.sh's whole job is a presence
+# check, so a missing tool is the finding and must surface as exit 1.
 exit "$missing"
