@@ -1,0 +1,13 @@
+name: Bad Lint Example
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: echo "testing ${{ steps.setup.outputs.missing }}"
