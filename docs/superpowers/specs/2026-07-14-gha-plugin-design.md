@@ -45,6 +45,7 @@ packaging for Cursor/Codex/Gemini in v1).
 | `wrkflw` | Local execution of workflows without requiring Docker/Podman | Chosen over `act` specifically to avoid the Docker-running requirement — a nicer default UX. Falls back to container mode if Docker/Podman happen to be available and needed. |
 | `zizmor` | Security static analysis (unpinned actions, `pull_request_target` misuse, script injection, overbroad permissions) | Emits SARIF; offline-first. |
 | `pinact` | Pin actions/reusable workflows to full-length commit SHAs, verify/update version comments | Used by the maintain skill for SHA pinning and version bumps. |
+| `jq` | JSON parsing inside the wrapper scripts | Not a GitHub Actions tool itself, but a hard dependency of the scripts that parse `actionlint` JSON, zizmor SARIF, and `gh` JSON output. Checked by `gha-doctor` like the rest. |
 
 ## Architecture
 
@@ -56,13 +57,13 @@ natural language without the user typing the slash command.
 
 | Command | Wraps | Behavior |
 |---|---|---|
-| `/gha:brainstorming` | orchestrates everything below | Guided creation/modification flow (see below) |
+| `/gha:brainstorming` | `gha-brainstorming` | Guided creation/modification flow (see below) |
 | `/gha:review` | `gha-lint` + `gha-security-audit` | Lint + security findings, consolidated, file:line |
 | `/gha:maintain` | `gha-maintain` | Pin/update actions, deprecation/EOL scan, cross-workflow drift audit; proposes a diff, doesn't auto-commit |
 | `/gha:test` | `gha-local-run` | Runs a workflow/job locally via `wrkflw` |
 | `/gha:trigger` | `gha-trigger` | `gh workflow run` (with input prompting) / `gh run rerun` / `gh run cancel` |
 | `/gha:watch` | `gha-monitor` | Live watch of a run (foreground or background via the Monitor tool) or a historical health report |
-| `/gha:doctor` | `gha-doctor` | Reports which of `gh`/`actionlint`/`wrkflw`/`zizmor`/`pinact` are missing, with install commands |
+| `/gha:doctor` | `gha-doctor` | Reports which of `gh`/`actionlint`/`wrkflw`/`zizmor`/`pinact`/`jq` are missing, with install commands |
 
 ### Skills (`skills/`)
 
@@ -70,11 +71,12 @@ natural language without the user typing the slash command.
 |---|---|---|
 | `gha-lint` | action | Run `actionlint`, parse JSON output into findings |
 | `gha-security-audit` | action | Run `zizmor`, parse SARIF into findings, cross-reference `gha-dangerous-patterns` |
-| `gha-maintain` | action | Run `pinact` for SHA pinning/version bumps; scan for deprecated runners/actions/EOL toolchains; audit multiple workflow files for drift (inconsistent versions, duplicated logic that should be a reusable workflow) |
+| `gha-maintain` | action | Interpret `maintain.sh` output: propose SHA pinning/version bumps (via `pinact`), flag deprecated runners/actions/EOL toolchains, and audit multiple workflow files for drift (inconsistent versions, duplicated logic that should be a reusable workflow). The script does only mechanical work — running `pinact` and emitting an inventory of `uses:` refs and runner labels; all deprecation/EOL/drift judgment lives in the skill, which verifies uncertain deprecation claims via WebSearch rather than trusting a hardcoded list |
 | `gha-local-run` | action | Run a workflow/job via `wrkflw`; troubleshooting matrix for common failures |
 | `gha-trigger` | action | Dispatch/rerun/cancel runs via `gh` |
 | `gha-monitor` | action | Live watch (incl. Monitor-tool-backed background tracking) + run history/health trends (flaky jobs, rising durations) |
-| `gha-doctor` | action | Presence/version checks for the five tools above; never installs anything itself |
+| `gha-doctor` | action | Presence/version checks for the six tools above; never installs anything itself |
+| `gha-brainstorming` | action | The guided creation/modification flow described below. Exists as a skill (not just command logic) so the flow is reachable from natural language, consistent with every other command |
 | `gha-dangerous-patterns` | knowledge | Catalog of GH Actions security anti-patterns: `pull_request_target` combined with untrusted PR-head checkout, script injection via `${{ }}` interpolation in `run:` steps, overbroad `GITHUB_TOKEN` permissions, unpinned third-party actions, cache/artifact poisoning. No standalone action — every skill that touches workflow content (`gha-security-audit`, `gha-maintain`, `gha-creator`, `gha-auditor`) cross-references it, so the same knowledge applies whether or not a subagent is involved. |
 
 ### Scripts (`scripts/`)
@@ -90,12 +92,17 @@ that.
 Each wrapper script:
 1. Runs the underlying tool against the given target(s).
 2. Writes the full, unfiltered output to a file in the OS temp directory
-   (a fresh path per invocation) and prints that path.
+   (a fresh path per invocation) and prints that path. Temp files are
+   created with `mktemp "${TMPDIR:-/tmp}/gha-<name>.XXXXXX"` — never a
+   hardcoded `/tmp` prefix, and never a suffix after the `XXXXXX` template
+   (BSD/macOS `mktemp` rejects suffixed templates; this was a real bug
+   fixed in Plan 1).
 3. Parses the same output into a compact result and prints that instead of
    letting the raw output reach the agent.
    - **Happy path** is a single line: what ran, against what, and the
-     headline numbers — e.g. `ci.yml: actionlint OK (147 lines, 0 warnings,
-     0 errors)`. Enough for the agent to sense-check that linting actually
+     headline numbers — e.g. `ci.yml: actionlint OK (147 lines, 0 issues)`
+     (actionlint has a single severity tier, so summaries count "issues",
+     not warnings/errors). Enough for the agent to sense-check that linting actually
      happened, against the right file, and the file wasn't empty — without
      paying for a wall of "no issues" output.
    - **Non-happy path** prints a compact findings list (rule, file:line,
@@ -106,14 +113,19 @@ Each wrapper script:
    so skills can distinguish "the tool couldn't run" from "the tool ran and
    found problems."
 
+   **Carve-out:** this rule applies to the analysis wrappers. A pure
+   presence check (`doctor.sh`) exits `1` when a tool is missing, because
+   tool presence *is* its finding — there is no separate "tool ran but
+   found problems" state to distinguish.
+
 | Script | Wraps | Used by |
 |---|---|---|
 | `scripts/lint.sh` | `actionlint` | `gha-lint` |
 | `scripts/security-audit.sh` | `zizmor` | `gha-security-audit` |
 | `scripts/local-run.sh` | `wrkflw` | `gha-local-run` |
-| `scripts/maintain.sh` | `pinact` + deprecation/drift checks | `gha-maintain` |
-| `scripts/doctor.sh` | presence/version checks for all five tools | `gha-doctor` |
-| `scripts/gh-run-log.sh` | `gh run view --log` / `gh run watch` | `gha-monitor` (only where log volume is a concern — simple dispatch/cancel calls in `gha-trigger` don't need wrapping) |
+| `scripts/maintain.sh` | `pinact` + a mechanical inventory (`uses:` refs grouped by action, distinct runner labels) — no judgment calls | `gha-maintain` |
+| `scripts/doctor.sh` | presence/version checks for all six tools | `gha-doctor` |
+| `scripts/gh-run-log.sh` | `gh run view --log` (per-run log summary) and `gh run list --json` aggregation (run-history health table) | `gha-monitor` (only where log volume is a concern — simple dispatch/cancel calls in `gha-trigger` don't need wrapping, and live watching stays on `gh run watch` directly since a buffered stream would defeat watching) |
 
 Skills call these scripts via Bash and read only the compact summary; the
 temp file path is there for the agent (or the user) to drill in only when
@@ -141,7 +153,11 @@ spec-doc stage.
 4. Propose 2-3 approaches with trade-offs and a recommendation.
 5. Present a short inline design summary (trigger, jobs, key decisions) in
    chat — not a committed spec file — and get approval.
-6. Invoke `writing-plans` for an implementation plan.
+6. Produce a short inline implementation plan using the flow's own
+   lightweight format (workflow file(s) to create/modify, jobs and key
+   steps, verification steps). Self-contained by design — the flow never
+   invokes superpowers skills, since users installing this plugin may not
+   have them.
 7. On plan approval, dispatch to `gha-creator`: writes the workflow YAML,
    loops lint → security → local-run (`wrkflw`) until clean.
 8. **Stop and get explicit user confirmation before push, PR creation, or
