@@ -1,7 +1,6 @@
 ---
 name: gha-brainstorming
 description: This skill should be used when the user asks to "create a workflow", "add CI to this repo", "set up a deploy pipeline", "add a GitHub Action for X", or wants to significantly modify an existing workflow's behavior. Guides workflow creation/modification through clarifying questions, best-practice research, a short approved design, then dispatches gha-creator to build and verify it. Self-contained — requires no other plugins.
-version: 0.1.0
 ---
 
 # gha Brainstorming

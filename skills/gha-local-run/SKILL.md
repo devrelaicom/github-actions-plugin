@@ -1,7 +1,6 @@
 ---
 name: gha-local-run
 description: This skill should be used when the user asks to "run this workflow locally", "test my GitHub Actions without pushing", "run wrkflw", "dry-run this workflow", or "check if this workflow works before I push". Executes a workflow locally via wrkflw (emulation mode by default, container mode optional) and interprets failures with a troubleshooting matrix.
-version: 0.1.0
 ---
 
 # gha Local Run
@@ -23,6 +22,10 @@ depend on a real container environment), pass it through:
   the matrix below before showing the user a wall of log text. The
   `Full output: <path>` line has the complete log for drill-down.
 - `MISSING wrkflw` → point the user to `/gha:doctor`.
+
+The wrapper always exits `0` once the run has happened — a FAILED workflow
+is a result, not a script error — so read PASSED vs FAILED from the summary
+text, not from the exit code.
 
 ## Troubleshooting matrix
 

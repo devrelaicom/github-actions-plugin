@@ -1,17 +1,16 @@
 ---
 name: gha-dangerous-patterns
 description: This skill should be used when writing, editing, or reviewing GitHub Actions workflow files, or when asked to "check for security issues in this workflow", "is this workflow safe", "review this action for vulnerabilities", or "what's wrong with this workflow's permissions". Provides a catalog of known GitHub Actions security anti-patterns to check for. Other gha skills and agents that touch workflow content should reference this skill rather than re-deriving this knowledge.
-version: 0.1.0
 ---
 
 # GitHub Actions Security Anti-Patterns
 
 Check workflow content against the anti-patterns below whenever creating,
 editing, or reviewing a `.github/workflows/*.yml` file. This is reference
-knowledge, not an executable check — the `gha-security-audit` skill (a
-later plan) runs `zizmor` for automated detection; this skill exists so the
-same knowledge is available even when `zizmor` isn't run, e.g. while
-`gha-creator` is drafting a new workflow.
+knowledge, not an executable check — the `gha-security-audit` skill runs
+`zizmor` for automated detection; this skill exists so the same knowledge
+is available even when `zizmor` isn't run, e.g. while `gha-creator` is
+drafting a new workflow.
 
 ## `pull_request_target` with untrusted checkout
 
@@ -73,7 +72,7 @@ non same-org) action.
 
 Fix: pin to the full commit SHA with the human-readable version as a
 trailing comment (`uses: some/action@<40-char-sha> # v1.2.3`) — this is
-what the `pinact` tool (via `gha-maintain`, a later plan) automates.
+what the `pinact` tool (via `gha-maintain`) automates.
 
 ## Cache and artifact poisoning
 

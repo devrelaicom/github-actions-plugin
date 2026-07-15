@@ -1,7 +1,6 @@
 ---
 name: gha-maintain
 description: This skill should be used when the user asks to "pin my actions", "SHA-pin this workflow", "update action versions", "are my workflows using deprecated actions or runners", "check for outdated actions", or "audit my workflows for drift". Runs pinact through a wrapper for SHA pinning and version checks, then interprets the mechanical inventory for deprecations, EOL toolchains, and cross-workflow drift. Proposes diffs; never commits.
-version: 0.1.0
 ---
 
 # gha Maintain

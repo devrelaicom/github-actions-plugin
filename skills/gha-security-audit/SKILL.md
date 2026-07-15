@@ -1,7 +1,6 @@
 ---
 name: gha-security-audit
 description: This skill should be used when the user asks to "security review this workflow", "check this workflow for vulnerabilities", "run zizmor", "is this GitHub Actions file safe", "audit workflow permissions", or when /gha:review needs security findings. Runs zizmor security static analysis against workflow files and reports findings with file:line references.
-version: 0.1.0
 ---
 
 # gha Security Audit
@@ -32,11 +31,11 @@ onto its catalog:
 
 | zizmor rule | gha-dangerous-patterns section |
 |---|---|
-| `dangerous-triggers` | `pull_request_target` with untrusted checkout |
-| `template-injection` | Script injection via `${{ }}` in `run:` steps |
-| `excessive-permissions` | Overbroad `GITHUB_TOKEN` permissions |
-| `unpinned-uses` | Unpinned third-party actions |
-| `artipacked`, `cache-poisoning` | Cache and artifact poisoning / credential persistence |
+| `zizmor/dangerous-triggers` | `pull_request_target` with untrusted checkout |
+| `zizmor/template-injection` | Script injection via `${{ }}` in `run:` steps |
+| `zizmor/excessive-permissions` | Overbroad `GITHUB_TOKEN` permissions |
+| `zizmor/unpinned-uses` | Unpinned third-party actions |
+| `zizmor/artipacked`, `zizmor/cache-poisoning` | Cache and artifact poisoning / credential persistence |
 
 For each finding, explain the risk and give the concrete fix from the
 catalog. Read the surrounding workflow context before suggesting a fix —

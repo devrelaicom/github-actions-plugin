@@ -1,7 +1,6 @@
 ---
 name: gha-lint
 description: This skill should be used when the user asks to "lint this workflow", "check this GitHub Actions file for errors", "validate my workflow syntax", "run actionlint", or is editing a file under .github/workflows/. Runs actionlint against one or more workflow files and reports correctness/schema findings.
-version: 0.1.0
 ---
 
 # gha Lint
@@ -41,6 +40,4 @@ The script's own summary is already the right level of detail to relay:
 `actionlint` checks correctness and schema, not security. If the user's
 request is really about security (unpinned actions, `pull_request_target`
 misuse, script injection, permissions), that's the `gha-security-audit`
-skill's job (a later plan) — cross-reference the `gha-dangerous-patterns`
-skill's catalog in the meantime if `gha-security-audit` isn't available yet
-in this installation.
+skill's job (or `/gha:review`, which runs both lint and security together).

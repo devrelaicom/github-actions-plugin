@@ -1,7 +1,6 @@
 ---
 name: gha-monitor
 description: This skill should be used when the user asks to "watch this workflow run", "is my CI passing", "monitor the deploy", "why did that run fail", "show me the run logs", "which workflows are flaky", or "how healthy is our CI". Watches GitHub Actions runs live (foreground or background) and produces run-history health reports via gh.
-version: 0.1.0
 ---
 
 # gha Monitor

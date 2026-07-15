@@ -1,7 +1,6 @@
 ---
 name: gha-trigger
 description: This skill should be used when the user asks to "trigger this workflow", "run the deploy workflow on GitHub", "dispatch a workflow", "rerun that failed run", "rerun failed jobs", or "cancel that run". Dispatches, reruns, and cancels GitHub Actions runs via gh, with input prompting for workflow_dispatch and an explicit confirmation before every mutating call.
-version: 0.1.0
 ---
 
 # gha Trigger

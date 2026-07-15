@@ -1,7 +1,6 @@
 ---
 name: gha-doctor
 description: This skill should be used when the user asks to "check my GitHub Actions tooling", "is wrkflw/actionlint installed", "what do I need for gha", "run gha doctor", or when another gha skill reports a missing tool and needs to point the user somewhere for install instructions. Checks whether gh, actionlint, wrkflw, zizmor, pinact, and jq are installed and reports install commands for anything missing. Never installs anything itself.
-version: 0.1.0
 ---
 
 # gha Doctor
@@ -32,14 +31,14 @@ not offer to run it "just this once."
 |---|---|
 | `gh` | All GitHub API access (auth, PRs, runs, dispatch) |
 | `actionlint` | Workflow syntax/schema correctness (used by `gha-lint`) |
-| `wrkflw` | Local workflow execution without requiring Docker (a later plan's `gha-local-run`). If a user asks about `act` specifically, note that `gha` uses `wrkflw` instead — `doctor.sh` does not check for `act`. |
-| `zizmor` | Security static analysis (a later plan's `gha-security-audit`) |
-| `pinact` | SHA-pinning and version updates for actions (a later plan's `gha-maintain`) |
+| `wrkflw` | Local workflow execution without requiring Docker (used by `gha-local-run`). If a user asks about `act` specifically, note that `gha` uses `wrkflw` instead — `doctor.sh` does not check for `act`. |
+| `zizmor` | Security static analysis (used by `gha-security-audit`) |
+| `pinact` | SHA-pinning and version updates for actions (used by `gha-maintain`) |
 | `jq` | JSON parsing used internally by gha's own wrapper scripts — not a GitHub Actions tool itself, but required for the others to work |
 
 ## When another skill reports a missing tool
 
-If `gha-lint` (or, in later plans, `gha-security-audit`, `gha-local-run`,
+If `gha-lint` (or `gha-security-audit`, `gha-local-run`,
 `gha-maintain`) reports that its required tool is missing, don't
 re-implement a presence check inline — run this skill's check instead and
 relay its output, so the user gets one consistent doctor report rather than
