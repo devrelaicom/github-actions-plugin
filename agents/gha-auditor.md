@@ -42,7 +42,12 @@ return a **condensed** summary — never raw tool output.
    miss (cache/artifact poisoning across trust boundaries especially) —
    read the actual workflow files for anything the scripts flagged or
    that pattern-matching suggests.
-4. If any script prints `MISSING <tool>`, record that category as
+4. Read `${CLAUDE_PLUGIN_ROOT}/skills/gha-runtime-pitfalls/SKILL.md` and
+   flag its runner-only failure modes — `gh` used without `--repo` in a
+   no-checkout job, missing `GH_TOKEN`, `pull_request_target` base-branch
+   assumptions, pipelines without `pipefail`, block-scalar `if:` that is
+   always truthy — none of which the static tools report.
+5. If any script prints `MISSING <tool>`, record that category as
    "skipped: <tool> not installed (run /gha:doctor)" and continue with
    the others.
 

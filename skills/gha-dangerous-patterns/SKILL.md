@@ -12,6 +12,14 @@ knowledge, not an executable check — the `gha-security-audit` skill runs
 is available even when `zizmor` isn't run, e.g. while `gha-creator` is
 drafting a new workflow.
 
+The companion `gha-runtime-pitfalls` skill covers failure modes that pass
+every static check and only surface on a live runner. Some of them carry a
+security dimension this catalog also cares about — a fork PR's read-only
+token (which pushes people toward `pull_request_target`, governed by the
+untrusted-checkout pattern below) and `$GITHUB_OUTPUT`/`$GITHUB_ENV` heredoc
+handling (a `${{ }}`-adjacent injection surface). Read that skill too when
+writing or auditing a workflow.
+
 ## `pull_request_target` with untrusted checkout
 
 `pull_request_target` runs with the base repo's permissions and secrets,

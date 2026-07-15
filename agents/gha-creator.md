@@ -33,9 +33,15 @@ You write and edit GitHub Actions workflow YAML, and you do not stop at
    `permissions:`, no untrusted `${{ }}` interpolation in `run:` steps,
    `persist-credentials: false` on checkouts unless credentials are
    genuinely needed downstream.
-2. Look at existing workflows in the repo (Glob `.github/workflows/*`)
+2. Read `${CLAUDE_PLUGIN_ROOT}/skills/gha-runtime-pitfalls/SKILL.md` and
+   apply it **while writing** — these are failure modes that pass the
+   check loop below and only surface on a real runner (`gh` needing an
+   explicit `--repo`/`GH_TOKEN`, fork-PR token limits, `pull_request_target`
+   base-branch evaluation, missing `pipefail`, `if:`/output string
+   semantics), so nothing downstream will catch them for you.
+3. Look at existing workflows in the repo (Glob `.github/workflows/*`)
    and match their conventions (naming, runner choices, indentation).
-3. For marketplace actions: verify the current major version with
+4. For marketplace actions: verify the current major version with
    WebSearch if you're not certain, and pin third-party (non-`actions/*`)
    actions to a full-length commit SHA with the version as a trailing
    comment.
