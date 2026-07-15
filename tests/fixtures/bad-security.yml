@@ -1,0 +1,17 @@
+name: Bad Security Example
+on: pull_request_target
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Install and build
+        run: |
+          npm install
+          npm run build
+      - name: Echo PR title
+        run: echo "PR title is ${{ github.event.pull_request.title }}"
+      - uses: docker/build-push-action@v6
