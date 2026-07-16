@@ -11,6 +11,11 @@ through `${CLAUDE_PLUGIN_ROOT}/scripts/local-run.sh` rather than invoking
 
 ## Running a workflow
 
+Pick the target first: use the workflow file the user named. If they didn't
+name one, `Glob` `.github/workflows/*.yml` and `*.yaml` — if there's exactly
+one, use it; if there are several, list them and ask which to run rather than
+guessing.
+
 Run `${CLAUDE_PLUGIN_ROOT}/scripts/local-run.sh <workflow-file>` via Bash.
 The script defaults to wrkflw's **emulation mode** (no Docker/Podman
 required). To use container mode instead (needed for workflows that

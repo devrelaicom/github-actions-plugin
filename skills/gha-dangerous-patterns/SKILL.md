@@ -1,6 +1,6 @@
 ---
 name: gha-dangerous-patterns
-description: This skill should be used when writing, editing, or reviewing GitHub Actions workflow files, or when asked to "check for security issues in this workflow", "is this workflow safe", "review this action for vulnerabilities", or "what's wrong with this workflow's permissions". Provides a catalog of known GitHub Actions security anti-patterns to check for. Other gha skills and agents that touch workflow content should reference this skill rather than re-deriving this knowledge.
+description: This skill is the reference catalog of GitHub Actions security anti-patterns (pull_request_target misuse, script injection via ${{ }}, overbroad GITHUB_TOKEN permissions, unpinned actions, cache/artifact poisoning, credential persistence) to apply while writing or editing a workflow when no tool is being run. For an automated security scan that returns file:line findings, use gha-security-audit (which runs zizmor) instead — this skill is the knowledge those findings map onto. Other gha skills and agents that draft or reason about workflow content should reference this skill rather than re-deriving this knowledge.
 ---
 
 # GitHub Actions Security Anti-Patterns
@@ -81,6 +81,21 @@ non same-org) action.
 Fix: pin to the full commit SHA with the human-readable version as a
 trailing comment (`uses: some/action@<40-char-sha> # v1.2.3`) — this is
 what the `pinact` tool (via `gha-maintain`) automates.
+
+## Credential persistence via `actions/checkout`
+
+By default `actions/checkout` writes the job's `GITHUB_TOKEN` into the local
+`.git/config` (`persist-credentials: true`) so later steps can push. That token
+then lives on disk for the rest of the job — any step that uploads the
+workspace as an artifact, or any later untrusted code, can read it back out
+(the "ArtiPACKED" class; `zizmor` flags it as `artipacked`).
+
+Flag: an `actions/checkout` step without `persist-credentials: false` in a job
+that does not itself use the stored credential to push back to the repo.
+
+Fix: set `persist-credentials: false` on the checkout unless a later step
+genuinely needs the persisted credential — and when it does, keep that job's
+scope tight and avoid uploading the workspace as an artifact.
 
 ## Cache and artifact poisoning
 

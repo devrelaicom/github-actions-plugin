@@ -44,7 +44,8 @@ flow is for new workflows or behavior-changing modifications.
    Get approval on the plan. (Self-contained on purpose: this flow never
    invokes another plugin's planning skills.)
 7. **Dispatch the `gha-creator` agent** with the approved plan. It
-   applies the `gha-dangerous-patterns` catalog while writing the YAML,
+   applies the `gha-dangerous-patterns` and `gha-runtime-pitfalls`
+   catalogs while writing the YAML,
    then loops `gha-lint` → `gha-security-audit` → `gha-local-run` until
    clean, and reports back. Relay its report, including caveats.
 8. **GATE: nothing leaves the machine without explicit confirmation.**

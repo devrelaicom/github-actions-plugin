@@ -1,6 +1,6 @@
 ---
 name: gha-lint
-description: This skill should be used when the user asks to "lint this workflow", "check this GitHub Actions file for errors", "validate my workflow syntax", "run actionlint", or is editing a file under .github/workflows/. Runs actionlint against one or more workflow files and reports correctness/schema findings.
+description: This skill should be used when the user asks to "lint this workflow", "check this GitHub Actions file for errors", "validate my workflow syntax", or "run actionlint". Runs actionlint against one or more workflow files and reports correctness/schema findings.
 ---
 
 # gha Lint
@@ -34,6 +34,15 @@ The script's own summary is already the right level of detail to relay:
 - If the script prints an `ERROR ...` line (a named file that doesn't
   exist, or actionlint itself failing to run), relay that line directly
   and stop — don't retry or improvise a workaround.
+
+## Scale
+
+If the repo has more than ~5 workflow files, or the user asked for a
+full-repo pass, dispatch the `gha-auditor` agent instead of running
+file-by-file in the main conversation (it runs lint/security/maintain
+across every file and returns a condensed summary). If that agent isn't
+available in this installation, fall back to running the script against
+all files in one invocation.
 
 ## Security findings are a separate concern
 

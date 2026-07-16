@@ -1,6 +1,6 @@
 ---
 name: gha-runtime-pitfalls
-description: This skill should be used when writing, editing, or reviewing GitHub Actions workflow files, especially before pushing one to a real runner for the first time. Provides a catalog of failure modes that pass local checks (actionlint, zizmor, wrkflw) and only surface on a live GitHub runner — gh CLI repo/token requirements, fork-PR token limits, pull_request_target evaluation, shell pipefail defaults, $GITHUB_OUTPUT and if-expression string semantics, checkout depth, API pagination, and concurrency cancellation. Other gha skills and agents that write or audit workflow content should reference this skill rather than re-deriving this knowledge.
+description: This skill should be used when writing or editing a GitHub Actions workflow, especially before its first push to a real runner — e.g. "why did this pass locally but fail on GitHub", "will this actually run on a runner", "check this workflow for runtime gotchas". A non-security catalog of failure modes that pass actionlint/zizmor/wrkflw yet only fail on a live runner — gh CLI repo/token needs, fork-PR token limits, pull_request_target evaluation, missing pipefail, if/output string semantics, checkout depth, and concurrency. Companion to gha-dangerous-patterns (security anti-patterns); other gha skills and agents should reference it rather than re-derive it.
 ---
 
 # GitHub Actions Runtime Pitfalls
@@ -73,12 +73,6 @@ re-reading the same changed-file list via `GET /pulls/{n}/files` isn't defense
 in depth, and that endpoint caps at 3000 files, so it can *miss* what the paths
 filter already caught.
 
-### `branch:` / `tag:` (singular) is silently ignored
-
-The trigger keys are `branches:` and `tags:`. Writing `branch:` or `tag:`
-(singular) is accepted as an unknown YAML key and the filter simply never
-applies — the workflow triggers on everything. There is no error.
-
 ## Shell & data flow
 
 ### Default `bash` has `-e` but not `pipefail`
@@ -133,9 +127,13 @@ correctness-critical scan, always `--paginate` (and note the 3000-file cap on
 
 ## Concurrency
 
-### A `concurrency` group cancels by default, and queues at most one
+### A `concurrency` group queues by default — it does not cancel the running run
 
-By default a `concurrency` group **cancels** the superseded run rather than
-queuing it. Even with `cancel-in-progress: false`, a group holds at most one
-running plus one pending run — a third arrival evicts the pending one. If you
-need every run to complete in order, a `concurrency` group is the wrong tool.
+By default (`cancel-in-progress` unset or `false`) a superseding run is
+**queued as pending** while the in-progress run finishes — the running run is
+**not** cancelled. Only one run may sit pending at a time (`queue: single`, the
+default), so a *third* arrival cancels the previously-pending run and takes its
+place. To cancel the *running* run instead, set `cancel-in-progress: true`; to
+let more than one run wait in line, set `queue: max`. The common wrong
+assumption is that the default either cancels the old run or queues everything
+in order — it does neither.

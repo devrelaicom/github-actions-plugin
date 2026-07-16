@@ -58,6 +58,9 @@ return a **condensed** summary — never raw tool output.
 - **Findings:** grouped by severity (security findings that are
   exploitable first), each as `file:line — issue — fix`, deduplicated
   across tools (zizmor and the patterns catalog overlap; report once).
+  `actionlint` correctness findings carry no inherent severity level —
+  rank them after the security findings, errors that break the run
+  (schema/undefined-reference) ahead of style/nits.
 - **Drift table:** actions used at inconsistent versions across files,
   from maintain.sh's inventory.
 - **Skipped/uncertain:** anything you couldn't check and why.

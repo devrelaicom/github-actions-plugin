@@ -39,12 +39,17 @@ You write and edit GitHub Actions workflow YAML, and you do not stop at
    explicit `--repo`/`GH_TOKEN`, fork-PR token limits, `pull_request_target`
    base-branch evaluation, missing `pipefail`, `if:`/output string
    semantics), so nothing downstream will catch them for you.
-3. Look at existing workflows in the repo (Glob `.github/workflows/*`)
+3. Look at existing workflows in the repo (Glob `.github/workflows/*`,
+   and `Grep` across them for recurring runner labels / action versions)
    and match their conventions (naming, runner choices, indentation).
-4. For marketplace actions: verify the current major version with
-   WebSearch if you're not certain, and pin third-party (non-`actions/*`)
-   actions to a full-length commit SHA with the version as a trailing
-   comment.
+4. For marketplace actions: use WebSearch only to confirm the current
+   major version if you're not certain — never as the source of a SHA.
+   Resolve the tag→SHA mapping **mechanically** with `gh api
+   repos/<owner>/<repo>/commits/<tag>` (or `git ls-remote --tags
+   https://github.com/<owner>/<repo>`), both read-only, and pin
+   third-party (non-`actions/*`) actions to that full-length commit SHA
+   with the version as a trailing comment. Transcribing a SHA from search
+   results risks pinning a stale or wrong commit into a security control.
 
 ## The verification loop
 
@@ -59,10 +64,16 @@ iterations; all scripts via Bash):
    `${CLAUDE_PLUGIN_ROOT}/skills/gha-local-run/SKILL.md`. A failure
    caused by a genuine local-execution limitation (secrets, emulation
    gaps) is acceptable to carry as a caveat; a failure in workflow logic
-   is not.
+   is not. `local-run.sh` takes one workflow at a time — if the plan
+   produced more than one workflow file, run it once per file.
 
 If any script prints `MISSING <tool>`, skip that check, and say so in
 your report rather than silently passing.
+
+If you reach the 5-iteration cap with a check still failing (and it's not
+a carried local-execution caveat), **stop and report the workflow as not
+converged** — name each check still failing and its last finding. Do not
+exceed 5 iterations, and do not present an unclean workflow as done.
 
 ## Hard boundaries
 
@@ -75,7 +86,8 @@ your report rather than silently passing.
 
 - The workflow file path(s) and a 2-3 sentence description of behavior.
 - Check results: lint / security / local-run, each "clean", "clean with
-  caveat: <what>", or "skipped: <why>".
+  caveat: <what>", "skipped: <why>", or "still failing after 5 iterations:
+  <last finding>" (see the not-converged rule above).
 - Iterations used and what the loop caught (one line each — this tells
   the user what reviewing already happened).
 - Any decision you made that the plan didn't specify.

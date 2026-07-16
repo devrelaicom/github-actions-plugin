@@ -26,6 +26,16 @@ and `*.yaml` and pass all of them. The output has three parts to relay:
 
 `MISSING pinact` → point the user to `/gha:doctor`; don't work around it.
 
+## Scale
+
+If the repo has more than ~5 workflow files, or the user asked for a
+full-repo maintenance sweep, dispatch the `gha-auditor` agent instead of
+working file-by-file in the main conversation (it runs the same
+check-mode inventory across every file and returns a condensed drift
+summary). Pin mode still happens here, on the user's go-ahead. If that
+agent isn't available in this installation, fall back to running
+`maintain.sh check` against all files in one invocation.
+
 ## Applying pins
 
 Only after the user has seen the check-mode report and agreed: run
