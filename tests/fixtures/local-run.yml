@@ -1,0 +1,16 @@
+name: Local Run Example
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo "hello from wrkflw"
+      - name: Do math
+        run: test "$((2 + 2))" = "4"

@@ -1,6 +1,6 @@
 {
   "name": "gha",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create, review, maintain, locally test, trigger, and monitor GitHub Actions workflows from Claude Code",
   "author": {
     "name": "Aaron Bassett",
